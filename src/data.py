@@ -1,0 +1,36 @@
+"""Window-aware data loading utilities."""
+
+import pandas as pd
+
+from src.config import WINDOWS_DIR, WINDOW_DATES
+
+
+def ds_to_window_date(ds: str) -> str:
+    """Map Airflow ds directly to a window date. ds IS the window date."""
+    if ds not in WINDOW_DATES:
+        raise ValueError(f"ds={ds} not in known windows: {WINDOW_DATES}")
+    return ds
+
+
+def get_previous_window_date(ds: str) -> str | None:
+    """Return the prior window date, or None if this is the first."""
+    idx = WINDOW_DATES.index(ds)
+    return WINDOW_DATES[idx - 1] if idx > 0 else None
+
+
+def load_train(window_date: str) -> pd.DataFrame:
+    return pd.read_parquet(WINDOWS_DIR / f"{window_date}-train.parquet")
+
+
+def load_eval(window_date: str) -> pd.DataFrame:
+    return pd.read_parquet(WINDOWS_DIR / f"{window_date}-eval.parquet")
+
+
+def load_sliding_train(window_date: str) -> pd.DataFrame:
+    """Load current + previous window train sets (sliding window of 2)."""
+    prev = get_previous_window_date(window_date)
+    current = load_train(window_date)
+    if prev is None:
+        return current
+    previous = load_train(prev)
+    return pd.concat([previous, current], ignore_index=True)
