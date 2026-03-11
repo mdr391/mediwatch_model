@@ -72,7 +72,7 @@ uv sync
 uv run generate_windows.py
 
 # 2. Run the full pipeline across all windows
-uv run run_local.py > overall_report.log
+uv run runner.py > runner.log
 ```
 
 Output is written to `artifacts/`. Reports are archived under `artifacts/reports/drift_{window_date}.html`.
