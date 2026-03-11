@@ -31,7 +31,7 @@ Each window produces an HTML report with three sections:
 
 ```
 ├── generate_windows.py     # Slices raw data into frozen parquet snapshots
-├── run_local.py            # Simulation of champion/challenger train-eval process for windows.
+├── runner.py               # Simulation of champion/challenger train-eval process for windows.
 ├── src/
 │   ├── __init__.py
 │   ├── config.py            # paths, feature lists, constants
@@ -40,7 +40,7 @@ Each window produces an HTML report with three sections:
 │   ├── training.py          # model fit + save
 │   ├── evaluation.py        # metrics + save
 │   └── drift.py             # evidently reports
-GIT ├── windows/                 # Immutable windowed parquet files (by ISO date)
+├── windows/                 # Immutable windowed parquet files (by ISO date)
 │   ├── 2004-12-31-train.parquet
 │   ├── 2004-12-31-eval.parquet
 │   ├── ...
