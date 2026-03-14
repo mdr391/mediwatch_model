@@ -1,6 +1,6 @@
 # Champion / Challenger Retraining Pipeline
 
-A demonstration of automated model retraining with drift monitoring and gated promotion. The pipeline processes sequential time windows, trains a challenger model on each new window, and promotes it only when it measurably outperforms the incumbent champion on a shared holdout set.
+A demonstration of automated model retraining with drift monitoring and gated promotion. The pipeline processes sequential time windows, trains a challenger model on each new window, and promotes it only when it measurably outperforms the incumbent champion on the current window's evaluation set.
 
 ## Why This Exists
 
@@ -14,7 +14,7 @@ The dataset is the [UCI Diabetes 130-Hospitals](https://archive.ics.uci.edu/data
 Window 1 (cold start)         Windows 2–5 (warm start)
 ───────────────────           ──────────────────────────
 Train model on window    →    Train challenger on window
-Deploy as champion       →    Evaluate both on holdout
+Deploy as champion       →    Evaluate both on eval set
 Log to MLflow            →    Promote if challenger F1
                                exceeds champion F1 by ≥ 1%
                          →    Log both to MLflow
@@ -24,7 +24,7 @@ Log to MLflow            →    Promote if challenger F1
 Each window produces an HTML report with three sections:
 
 1. **Data** — Evidently drift and data quality analysis
-2. **Model** — Side-by-side champion vs. challenger metrics on the holdout set
+2. **Model** — Side-by-side champion vs. challenger metrics on the current window's evaluation set
 3. **Decision** — Promotion outcome with rationale
 
 ## Project Structure
@@ -54,7 +54,7 @@ Each window produces an HTML report with three sections:
 
 ## Data & Features
 
-The raw dataset is split into five year-long windows (~16,000 train / ~4,000 eval per window) plus a fixed holdout set for champion/challenger comparison.
+The raw dataset is split into five year-long windows. Each window is further split into an 80/20 train/eval split (~16,000 train / ~4,000 eval per window), where the 20% evaluation split serves as the shared evaluation set for champion/challenger comparison.
 
 **Numeric features (8):** hospital stay duration, procedure counts, medication counts, prior visit history.
 
@@ -79,7 +79,7 @@ Output is written to `artifacts/`. Reports are archived under `artifacts/reports
 
 ## Key Design Decisions
 
-**Champion/challenger over drift-triggered retraining.** Drift detection tells you the input distribution changed — not whether your model got worse. The holdout evaluation answers the question that matters: does the new model actually perform better?
+**Champion/challenger over drift-triggered retraining.** Drift detection tells you the input distribution changed — not whether your model got worse. Evaluating on the most recent data answers the question that matters: does the new model actually perform better?
 
 **F1 as the promotion metric.** With ~12% positive class rate, accuracy is dominated by the majority class. F1 balances precision and recall and is more sensitive to meaningful changes in model behavior.
 
@@ -91,7 +91,7 @@ Output is written to `artifacts/`. Reports are archived under `artifacts/reports
 
 This is a portfolio demonstration, not a production system. Key gaps:
 
-- **Delayed labels.** The holdout evaluation assumes labels are available at evaluation time. In production, challenger evaluation would run after a labeling lag window.
+- **Delayed labels.** The per-window evaluation assumes labels are available at evaluation time. In production, challenger evaluation would run after a labeling lag window.
 - **Rollback.** Artifact versioning supports reverting to a previous champion, but automated rollback on live performance degradation is not implemented.
 - **Orchestration.** The pipeline runs as a sequential script. In production, this maps to an Airflow DAG with `max_active_runs=1`, where each run reads the champion state finalized by the previous run.
 - **Weak signal.** ROC-AUC ranges from 0.54 to 0.61. The underlying prediction task is hard, and the pipeline correctly reflects that — some challengers are promoted, some are rejected. A higher-signal dataset (e.g., credit default with a pre/post-2008 split) would make drift effects more visually dramatic.
