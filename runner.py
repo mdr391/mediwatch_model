@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src.config import WINDOW_DATES
-from src.data import get_previous_window_date, load_eval, load_train
+from src.data import get_previous_window_date, load_eval, load_train, load_sliding_train
 from src.drift import run_drift_report
 from src.evaluation import evaluate_and_save
 from src.preprocessing import clean_and_engineer, engineer_features_for_drift, split_xy
@@ -110,7 +110,7 @@ class ChampionChallengerPipeline:
     # ── Helpers ─────────────────────────────────────────────────
 
     def _train(self, ds: str):
-        train_clean = clean_and_engineer(load_train(ds))
+        train_clean = clean_and_engineer(load_sliding_train(ds))
         X_train, y_train = split_xy(train_clean)
         train_and_save(X_train, y_train, window_date=ds)
         print(f"  Trained pipeline on {len(X_train)} samples")
