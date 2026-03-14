@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=mlflow
+      - POSTGRES_PASSWORD=mlflow
+      - POSTGRES_DB=mlflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  mlflow:
+    image: python:3.12-slim
+    environment:
+      - MLFLOW_HOST=0.0.0.0
+    command: >
+      bash -c "pip install mlflow psycopg2-binary boto3 &&
+               mlflow server
+               --backend-store-uri postgresql://mlflow:mlflow@db:5432/mlflow
+               --default-artifact-root /mlruns
+               --port 5000"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    volumes:
+      - ./mlruns_docker:/mlruns
+
+volumes:
+  db_data:
