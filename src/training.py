@@ -3,6 +3,8 @@
 import joblib
 from xgboost import XGBClassifier
 from sklearn.pipeline import Pipeline
+import mlflow
+import mlflow.sklearn
 
 from src.config import PIPELINES_DIR
 from src.preprocessing import build_preprocessor
@@ -36,6 +38,10 @@ def train_and_save(X_train, y_train, window_date: str) -> Pipeline:
 
     path = PIPELINES_DIR / f"pipeline_{window_date}.joblib"
     joblib.dump(pipe, path)
+
+    if mlflow.active_run():
+        mlflow.sklearn.log_model(pipe, "model")
+
     return pipe
 
 

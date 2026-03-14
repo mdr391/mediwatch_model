@@ -17,6 +17,12 @@ for d in [PIPELINES_DIR, EVALUATIONS_DIR, REPORTS_DIR]:
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
 MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME", "Mediwatch_Champion")
 
+# MinIO / S3 Configuration
+import os
+os.environ["AWS_ACCESS_KEY_ID"] = os.getenv("AWS_ACCESS_KEY_ID", "admin")
+os.environ["AWS_SECRET_ACCESS_KEY"] = os.getenv("AWS_SECRET_ACCESS_KEY", "password")
+os.environ["MLFLOW_S3_ENDPOINT_URL"] = os.getenv("MLFLOW_S3_ENDPOINT_URL", "http://127.0.0.1:9000")
+
 # Ordered window dates — each maps 1:1 to an Airflow ds
 WINDOW_DATES = [
     "2004-12-31",
