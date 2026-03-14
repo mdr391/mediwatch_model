@@ -81,6 +81,8 @@ Output is written to `artifacts/`. Reports are archived under `artifacts/reports
 
 **Champion/challenger over drift-triggered retraining.** Drift detection tells you the input distribution changed — not whether your model got worse. Evaluating on the most recent data answers the question that matters: does the new model actually perform better?
 
+**Sliding window training under drift.** The pipeline trains the challenger model on a sliding 2-year window (current + previous) rather than just the current window. This prevents catastrophic forgetting and provides a robust, generalized anchor against concept drift. [Read the analysis here](docs/sliding_window_analysis.md).
+
 **F1 as the promotion metric.** With ~12% positive class rate, accuracy is dominated by the majority class. F1 balances precision and recall and is more sensitive to meaningful changes in model behavior.
 
 **1% improvement threshold.** Prevents promotion on noise. A challenger that matches the champion isn't worth the deployment risk.
