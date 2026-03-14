@@ -10,7 +10,7 @@ from src.config import WINDOW_DATES
 from src.data import get_previous_window_date, load_eval, load_train
 from src.drift import run_drift_report
 from src.evaluation import evaluate_and_save
-from src.preprocessing import clean_and_engineer, split_xy
+from src.preprocessing import clean_and_engineer, engineer_features_for_drift, split_xy
 from src.training import load_pipeline, train_and_save
 
 PROMOTION_THRESHOLD = 0.01  # challenger must beat champion F1 by this margin
@@ -120,9 +120,8 @@ class ChampionChallengerPipeline:
         if prev_date is None:
             return False
 
-        target = "readmitted_binary"
-        ref = clean_and_engineer(load_eval(prev_date)).drop(columns=[target], errors="ignore")
-        cur = clean_and_engineer(load_eval(ds)).drop(columns=[target], errors="ignore")
+        ref = engineer_features_for_drift(load_eval(prev_date))
+        cur = engineer_features_for_drift(load_eval(ds))
 
         drift = run_drift_report(ref, cur, window_date=ds)
         print(f"  Drift detected: {drift}")

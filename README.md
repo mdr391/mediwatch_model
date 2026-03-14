@@ -85,7 +85,7 @@ Output is written to `artifacts/`. Reports are archived under `artifacts/reports
 
 **1% improvement threshold.** Prevents promotion on noise. A challenger that matches the champion isn't worth the deployment risk.
 
-**Single sklearn Pipeline artifact.** Preprocessing and model are serialized together. No separate preprocessing artifact to version, sync, or lose.
+**Single sklearn Pipeline artifact.** All custom feature engineering (missing value imputation, string casting, ICD-9 binning) and the predictive model are fully encapsulated within custom `scikit-learn` Transformers and serialized together into a single `.joblib` Pipeline. There is no separate data cleaning script needed at inference time, preventing training-serving skew.
 
 ## Caveats vs. Production
 
