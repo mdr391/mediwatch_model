@@ -7,9 +7,15 @@ PIPELINES_DIR = ARTIFACTS_DIR / "pipelines"
 EVALUATIONS_DIR = ARTIFACTS_DIR / "evaluations"
 REPORTS_DIR = ARTIFACTS_DIR / "reports"
 
+import os
+
 # Create dirs at import time
 for d in [PIPELINES_DIR, EVALUATIONS_DIR, REPORTS_DIR]:
     d.mkdir(parents=True, exist_ok=True)
+
+# ── MLflow Tracking Configuration ───────────────────────────────
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "./mlruns")
+MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME", "Mediwatch_Champion")
 
 # Ordered window dates — each maps 1:1 to an Airflow ds
 WINDOW_DATES = [

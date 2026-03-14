@@ -4,9 +4,11 @@
 import sys
 from pathlib import Path
 
+import mlflow
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from src.config import WINDOW_DATES
+from src.config import WINDOW_DATES, MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME
 from src.data import get_previous_window_date, load_eval, load_train, load_sliding_train
 from src.drift import run_drift_report
 from src.evaluation import evaluate_and_save
@@ -24,6 +26,9 @@ class ChampionChallengerPipeline:
         self.promotion_threshold = promotion_threshold
         self.champion_date: str | None = None
         self.history: list[dict] = []
+
+        mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+        mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)
 
     # ── Public entry point ──────────────────────────────────────
 
@@ -52,49 +57,59 @@ class ChampionChallengerPipeline:
 
     def _cold_start(self, ds: str, X_val, y_val):
         """First window — train and install as champion unconditionally."""
-        self._train(ds)
-        self.champion_date = ds
+        with mlflow.start_run(tags={"window": ds, "role": "cold_start"}):
+            self._train(ds)
+            self.champion_date = ds
 
-        pipe = load_pipeline(ds)
-        metrics = evaluate_and_save(pipe, X_val, y_val, model_date=ds, eval_window_date=ds)
+            pipe = load_pipeline(ds)
+            metrics = evaluate_and_save(pipe, X_val, y_val, model_date=ds, eval_window_date=ds)
+            mlflow.log_param("champion_date", ds)
+            mlflow.set_tag("outcome", "promoted")
 
-        print(f"  Cold start → champion = {ds}")
-        print(f"  Metrics: {metrics}")
-        self._log(ds, outcome="cold_start", champion=ds, champion_metrics=metrics)
+            print(f"  Cold start → champion = {ds}")
+            print(f"  Metrics: {metrics}")
+            self._log(ds, outcome="cold_start", champion=ds, champion_metrics=metrics)
 
     def _challenge(self, ds: str, X_val, y_val):
         """Drift detected — train challenger and compare against champion."""
-        self._train(ds)
+        with mlflow.start_run(tags={"window": ds, "role": "challenger"}):
+            self._train(ds)
 
-        champ_pipe = load_pipeline(self.champion_date)
-        chall_pipe = load_pipeline(ds)
+            champ_pipe = load_pipeline(self.champion_date)
+            chall_pipe = load_pipeline(ds)
 
-        champ_metrics = evaluate_and_save(
-            champ_pipe, X_val, y_val, model_date=self.champion_date, eval_window_date=ds
-        )
-        chall_metrics = evaluate_and_save(
-            chall_pipe, X_val, y_val, model_date=ds, eval_window_date=ds
-        )
+            champ_metrics = evaluate_and_save(
+                champ_pipe, X_val, y_val, model_date=self.champion_date, eval_window_date=ds
+            )
+            # We want metrics logged to MLflow to reflect the challenger's performance in this run
+            chall_metrics = evaluate_and_save(
+                chall_pipe, X_val, y_val, model_date=ds, eval_window_date=ds
+            )
 
-        promoted = chall_metrics["f1"] >= champ_metrics["f1"] + self.promotion_threshold
+            promoted = chall_metrics["f1"] >= champ_metrics["f1"] + self.promotion_threshold
 
-        if promoted:
-            prev_champion = self.champion_date
-            self.champion_date = ds
-            print(f"  PROMOTED: {ds}  (F1 {chall_metrics['f1']:.4f} vs {champ_metrics['f1']:.4f})")
-        else:
-            print(f"  RETAINED: {self.champion_date}  (F1 {champ_metrics['f1']:.4f} vs challenger {chall_metrics['f1']:.4f})")
+            if promoted:
+                prev_champion = self.champion_date
+                self.champion_date = ds
+                print(f"  PROMOTED: {ds}  (F1 {chall_metrics['f1']:.4f} vs {champ_metrics['f1']:.4f})")
+                mlflow.set_tag("outcome", "promoted")
+            else:
+                print(f"  RETAINED: {self.champion_date}  (F1 {champ_metrics['f1']:.4f} vs challenger {chall_metrics['f1']:.4f})")
+                mlflow.set_tag("outcome", "retained")
 
-        print(f"  Champion metrics:   {champ_metrics}")
-        print(f"  Challenger metrics: {chall_metrics}")
+            mlflow.log_metric("champion_f1_baseline", champ_metrics["f1"])
+            mlflow.log_param("champion_date", self.champion_date)
 
-        self._log(
-            ds,
-            outcome="promoted" if promoted else "retained",
-            champion=self.champion_date,
-            champion_metrics=champ_metrics,
-            challenger_metrics=chall_metrics,
-        )
+            print(f"  Champion metrics:   {champ_metrics}")
+            print(f"  Challenger metrics: {chall_metrics}")
+
+            self._log(
+                ds,
+                outcome="promoted" if promoted else "retained",
+                champion=self.champion_date,
+                champion_metrics=champ_metrics,
+                challenger_metrics=chall_metrics,
+            )
 
     def _skip(self, ds: str, X_val, y_val):
         """No drift — evaluate champion on new data, skip training."""

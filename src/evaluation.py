@@ -10,6 +10,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from sklearn.pipeline import Pipeline
+import mlflow
 
 from src.config import EVALUATIONS_DIR
 
@@ -42,4 +43,14 @@ def evaluate_and_save(
     with open(path, "w") as f:
         json.dump(metrics, f, indent=2)
 
+    if mlflow.active_run():
+        mlflow.log_metrics({
+            "accuracy": metrics["accuracy"],
+            "f1": metrics["f1"],
+            "precision": metrics["precision"],
+            "recall": metrics["recall"],
+            "roc_auc": metrics["roc_auc"],
+        })
+
     return metrics
+
