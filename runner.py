@@ -28,7 +28,7 @@ import mlflow
 import mlflow.sklearn
 from mlflow import MlflowClient
 
-from src.config import REPORTS_DIR, WINDOW_DATES
+from src.config import ARTIFACTS_DIR, REPORTS_DIR, WINDOW_DATES
 from src.mlflow_utils import ensure_experiment_active
 from src.data import get_previous_window_date, load_eval, load_sliding_train
 from src.drift import run_drift_report
@@ -346,9 +346,10 @@ class ChampionChallengerPipeline:
         })
 
     def _save_summary(self):
-        with open("summary.json", "w") as f:
+        path = ARTIFACTS_DIR / "summary.json"
+        with open(path, "w") as f:
             json.dump(self.history, f, indent=2)
-        print("\n[MLflow] summary.json written.")
+        print(f"\n[MLflow] {path} written.")
 
     def _print_summary(self):
         print(f"\n{'='*60}")
