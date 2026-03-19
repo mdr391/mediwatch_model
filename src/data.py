@@ -11,7 +11,7 @@ def get_previous_window_date(ds: str) -> str | None:
     return WINDOW_DATES[idx - 1] if idx > 0 else None
 
 
-def load_train(window_date: str) -> pd.DataFrame:
+def _load_train(window_date: str) -> pd.DataFrame:
     return pd.read_parquet(WINDOWS_DIR / f"{window_date}-train.parquet")
 
 
@@ -22,8 +22,8 @@ def load_eval(window_date: str) -> pd.DataFrame:
 def load_sliding_train(window_date: str) -> pd.DataFrame:
     """Load current + previous window train sets (sliding window of 2)."""
     prev = get_previous_window_date(window_date)
-    current = load_train(window_date)
+    current = _load_train(window_date)
     if prev is None:
         return current
-    previous = load_train(prev)
+    previous = _load_train(prev)
     return pd.concat([previous, current], ignore_index=True)
