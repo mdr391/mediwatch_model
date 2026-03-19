@@ -28,7 +28,7 @@ import mlflow
 import mlflow.sklearn
 from mlflow import MlflowClient
 
-from src.config import WINDOW_DATES
+from src.config import REPORTS_DIR, WINDOW_DATES
 from src.mlflow_utils import ensure_experiment_active
 from src.data import get_previous_window_date, load_eval, load_sliding_train
 from src.drift import run_drift_report
@@ -45,8 +45,6 @@ EXPERIMENT_NAME     = "mediwatch_champion_challenger"
 REGISTERED_MODEL    = "mediwatch_xgboost"
 CHAMPION_ALIAS      = "champion"
 
-# Evidently saves drift reports here — adjust if your path differs
-DRIFT_REPORT_DIR    = Path("artifacts/reports")
 
 
 # ---------------------------------------------------------------------------
@@ -102,7 +100,7 @@ def _log_metrics_block(prefix: str, metrics: dict) -> None:
 
 def _log_drift_artifact(window_date: str) -> None:
     """Log the Evidently drift HTML report for this window if it exists."""
-    report_path = DRIFT_REPORT_DIR / f"drift_{window_date}.html"
+    report_path = REPORTS_DIR / f"drift_{window_date}.html"
     if report_path.exists():
         mlflow.log_artifact(str(report_path), artifact_path="drift_report")
         print(f"[MLflow] Logged drift report: {report_path.name}")
