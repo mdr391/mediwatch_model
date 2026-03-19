@@ -1,6 +1,10 @@
 """
-MLflow Model Registry Validation Script
------------------------------------------
+MLflow Model Registry Validation Script — Acceptance test, not part of the pipeline.
+
+Verifies that the MLflow tracking server and model registry are
+correctly configured by running a self-contained train/register/promote
+cycle on synthetic data.
+
 - Trains 5 real XGBoost models on synthetic data
 - Logs metrics, params, and a JSON artifact per run
 - Registers each model version to the MLflow Model Registry
@@ -8,8 +12,7 @@ MLflow Model Registry Validation Script
 - Demonstrates loading the champion back for inference
 
 Usage:
-    uv add mlflow xgboost scikit-learn numpy
-    uv run mlflow_registry.py
+    uv run scripts/verify_mlflow_registry.py
     mlflow ui  →  http://localhost:5000
 """
 

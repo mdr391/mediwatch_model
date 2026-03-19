@@ -1,11 +1,13 @@
 """
-MLflow Clean Reset Script
---------------------------
+MLflow Clean Reset Script — Acceptance test, not part of the pipeline.
+
 Permanently deletes the experiment and all versions of the
 registered model so you can start fresh (e.g. for screenshots).
+Verifies that cleanup operations work correctly against the
+configured MLflow backend.
 
 Usage:
-    uv run mlflow_cleanup.py
+    uv run scripts/verify_mlflow_cleanup.py
 """
 
 import mlflow
