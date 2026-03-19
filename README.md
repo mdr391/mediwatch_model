@@ -41,8 +41,8 @@ Each window produces an HTML report with three sections:
 │   ├── preprocessing.py     # encoding, cleaning, pipeline
 │   ├── training.py          # model fit + save
 │   ├── evaluation.py        # metrics + save
-│   └── drift.py             # evidently reports
-│   └── mlflow_utils.py      # mlflow tools (for iteration)
+│   ├── drift.py             # evidently reports
+│   └── mlflow_utils.py      # shared MLflow helpers
 ├── windows/                 # Immutable windowed parquet files (by ISO date)
 │   ├── 2004-12-31-train.parquet
 │   ├── 2004-12-31-eval.parquet
