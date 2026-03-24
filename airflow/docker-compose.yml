@@ -7,7 +7,6 @@
 #   airflow-init — one-shot DB init + admin user creation
 #   scheduler  — Airflow scheduler
 #   webserver  — Airflow UI  (http://localhost:8080)
-#   triggerer  — required for deferrable operators
 #
 # Volumes:
 #   ./dags          — DAG files (mounted into all Airflow services)
@@ -83,7 +82,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 10s
+      start_period: 60s
 
   webserver:
     <<: *airflow-common
@@ -95,11 +94,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 10s
-
-  triggerer:
-    <<: *airflow-common
-    command: triggerer
+      start_period: 60s
 
 volumes:
   postgres-db:

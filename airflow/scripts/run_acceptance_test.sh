@@ -26,14 +26,14 @@ echo "============================================================"
 echo ""
 echo "► Starting Airflow stack..."
 docker compose -f "$COMPOSE_FILE" up -d --wait airflow-init
-docker compose -f "$COMPOSE_FILE" up -d --wait webserver scheduler triggerer
+docker compose -f "$COMPOSE_FILE" up -d --wait webserver scheduler
 
 echo ""
 echo "► Stack running. Waiting for webserver health check..."
 
 # Extra grace period — Airflow's /health endpoint can lag behind 'healthy'
 WAIT=0
-MAX=90
+MAX=120
 until curl -sf http://localhost:8080/health | grep -q '"healthy"'; do
   if [ $WAIT -ge $MAX ]; then
     echo "  Timed out waiting for Airflow webserver."
