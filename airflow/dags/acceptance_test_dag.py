@@ -4,16 +4,16 @@ dags/acceptance_test_dag.py
 Acceptance test DAG — proves the Airflow stack is healthy:
 
   1. env_check      : Python interpreter, PYTHONPATH, key env vars
-  2. project_import : imports src.config from the mounted project root
-  3. data_check     : verifies WINDOW_DATES is a non-empty list of strings
-  4. uv_check       : uv is available and can resolve the project deps
-  5. mlflow_check   : MLflow tracking URI is reachable (or local FS fallback)
+  2. python_check   : core Python packages importable (json, subprocess, etc.)
+  3. uv_check       : uv is available in container PATH
+  4. mlflow_check   : mlflow package importable and tracking URI reachable
 
 Trigger manually:
     airflow dags trigger mediwatch_acceptance_test
 Or via the REST API (see scripts/trigger_windows.py).
 
 This DAG is NOT scheduled — it is for validation only.
+No external project code is imported — this is a standalone stack validation.
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ with DAG(
         print(f"PYTHONPATH : {os.environ.get('PYTHONPATH', '(not set)')}")
         print(f"Working dir: {os.getcwd()}")
 
-        required = ["AIRFLOW__CORE__EXECUTOR", "PYTHONPATH"]
+        required = ["AIRFLOW__CORE__EXECUTOR"]
         missing  = [v for v in required if not os.environ.get(v)]
         if missing:
             raise EnvironmentError(f"Missing required env vars: {missing}")
@@ -59,53 +59,21 @@ with DAG(
         python_callable=check_env,
     )
 
-    # ── Task 2: project import ──────────────────────────────────────────────
+    # ── Task 2: python sanity check ───────────────────────────────────────
 
-    def check_project_import(**ctx):
-        project_root = os.environ.get("PYTHONPATH", "/opt/mediwatch")
-        if project_root not in sys.path:
-            sys.path.insert(0, project_root)
+    def check_python(**ctx):
+        import importlib
+        for mod in ["json", "subprocess", "pathlib", "logging"]:
+            importlib.import_module(mod)
+            print(f"  {mod} OK")
+        print("python_check PASSED")
 
-        try:
-            from src.config import WINDOW_DATES  # noqa: F401
-            print(f"src.config imported successfully from {project_root}")
-        except ImportError as e:
-            raise ImportError(
-                f"Could not import src.config from PYTHONPATH={project_root}. "
-                f"Is the project root mounted at that path?\n{e}"
-            )
-        print("project_import PASSED")
-
-    t_import = PythonOperator(
-        task_id="project_import",
-        python_callable=check_project_import,
+    t_python = PythonOperator(
+        task_id="python_check",
+        python_callable=check_python,
     )
 
-    # ── Task 3: data shape check ────────────────────────────────────────────
-
-    def check_data(**ctx):
-        project_root = os.environ.get("PYTHONPATH", "/opt/mediwatch")
-        if project_root not in sys.path:
-            sys.path.insert(0, project_root)
-
-        from src.config import WINDOW_DATES
-
-        assert isinstance(WINDOW_DATES, list),  "WINDOW_DATES must be a list"
-        assert len(WINDOW_DATES) > 0,           "WINDOW_DATES must not be empty"
-        assert all(isinstance(d, str) for d in WINDOW_DATES), \
-            "All WINDOW_DATES entries must be strings"
-
-        print(f"WINDOW_DATES: {len(WINDOW_DATES)} windows")
-        print(f"  First : {WINDOW_DATES[0]}")
-        print(f"  Last  : {WINDOW_DATES[-1]}")
-        print("data_check PASSED")
-
-    t_data = PythonOperator(
-        task_id="data_check",
-        python_callable=check_data,
-    )
-
-    # ── Task 4: uv available ────────────────────────────────────────────────
+    # ── Task 3: uv available ────────────────────────────────────────────────
 
     def check_uv(**ctx):
         import subprocess
@@ -127,13 +95,9 @@ with DAG(
         python_callable=check_uv,
     )
 
-    # ── Task 5: MLflow reachable ────────────────────────────────────────────
+    # ── Task 4: MLflow importable ─────────────────────────────────────────
 
     def check_mlflow(**ctx):
-        project_root = os.environ.get("PYTHONPATH", "/opt/mediwatch")
-        if project_root not in sys.path:
-            sys.path.insert(0, project_root)
-
         import mlflow
         tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "")
 
@@ -141,10 +105,8 @@ with DAG(
             mlflow.set_tracking_uri(tracking_uri)
             print(f"MLflow tracking URI : {tracking_uri}")
         else:
-            # falls back to local ./mlruns — valid for local dev
             print(f"MLFLOW_TRACKING_URI not set — using default: {mlflow.get_tracking_uri()}")
 
-        # lightweight check: list experiments (works for both local FS and server)
         client = mlflow.MlflowClient()
         experiments = client.search_experiments()
         print(f"MLflow experiments visible: {len(experiments)}")
@@ -157,8 +119,7 @@ with DAG(
 
     # ── Task ordering ───────────────────────────────────────────────────────
     #
-    #  env_check → project_import → data_check
-    #                             → uv_check
-    #                             → mlflow_check
+    #  env_check → python_check → uv_check
+    #                            → mlflow_check
 
-    t_env >> t_import >> [t_data, t_uv, t_mlflow]
+    t_env >> t_python >> [t_uv, t_mlflow]

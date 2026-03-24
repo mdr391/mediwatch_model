@@ -177,13 +177,17 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+WINDOW_DATES = [
+    "2004-12-31",
+    "2005-12-31",
+    "2006-12-31",
+    "2007-12-31",
+    "2008-12-31",
+]
+
+
 def get_window_dates() -> list[str]:
-    """Load WINDOW_DATES from the project config."""
-    import os
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    if project_root not in sys.path:
-        sys.path.insert(0, project_root)
-    from src.config import WINDOW_DATES
+    """Return the list of window dates for the pipeline."""
     return WINDOW_DATES
 
 

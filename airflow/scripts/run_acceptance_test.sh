@@ -50,6 +50,8 @@ echo "  Webserver healthy."
 echo ""
 echo "► Triggering acceptance test DAG..."
 
+# Temporarily disable errexit so we can capture the exit code
+set +e
 python3 "$SCRIPT_DIR/trigger_windows.py" \
   --dag-id mediwatch_acceptance_test \
   --single \
@@ -57,6 +59,7 @@ python3 "$SCRIPT_DIR/trigger_windows.py" \
   --timeout 300
 
 EXIT_CODE=$?
+set -e
 
 # ── 3. Report ───────────────────────────────────────────────────────────────
 echo ""
