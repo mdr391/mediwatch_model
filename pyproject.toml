@@ -31,7 +31,7 @@ pythonpath = ["."]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-exclude = ["src/old"]
+exclude = ["src/old", "notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
