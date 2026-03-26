@@ -22,8 +22,9 @@ import os
 import sys
 from datetime import datetime
 
-from airflow import DAG
 from airflow.operators.python import PythonOperator
+
+from airflow import DAG
 
 # ---------------------------------------------------------------------------
 # DAG definition

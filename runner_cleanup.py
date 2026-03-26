@@ -18,7 +18,7 @@ REGISTERED_MODEL = "mediwatch_xgboost"
 
 def main():
     client = MlflowClient()
-    print(f"\nCleaning up MLflow pipeline state...")
+    print("\nCleaning up MLflow pipeline state...")
     delete_experiment(client, EXPERIMENT_NAME)
     delete_registered_model(client, REGISTERED_MODEL)
     print("\nDone — ready for a clean pipeline run.\n")

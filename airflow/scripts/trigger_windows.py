@@ -37,7 +37,6 @@ import json
 import sys
 import time
 from datetime import datetime, timezone
-from typing import Optional
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -95,7 +94,7 @@ class AirflowClient:
         body = {
             "conf":              conf,
             "logical_date":      datetime.now(timezone.utc).isoformat(),
-            "note":              f"Triggered by trigger_windows.py",
+            "note":              "Triggered by trigger_windows.py",
         }
         data = self._post(f"/dags/{dag_id}/dagRuns", body)
         return data["dag_run_id"]

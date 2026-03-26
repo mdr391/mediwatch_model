@@ -40,11 +40,26 @@ np.random.seed(RANDOM_SEED)
 
 # --- 5 run configurations to compare ---
 run_configs = [
-    {"run_name": "run_baseline",   "n_estimators": 50,  "max_depth": 3, "learning_rate": 0.1,  "subsample": 1.0},
-    {"run_name": "run_deep",       "n_estimators": 50,  "max_depth": 6, "learning_rate": 0.1,  "subsample": 1.0},
-    {"run_name": "run_fast_lr",    "n_estimators": 100, "max_depth": 3, "learning_rate": 0.3,  "subsample": 1.0},
-    {"run_name": "run_subsampled", "n_estimators": 100, "max_depth": 4, "learning_rate": 0.1,  "subsample": 0.8},
-    {"run_name": "run_combined",   "n_estimators": 150, "max_depth": 5, "learning_rate": 0.05, "subsample": 0.9},
+    {
+        "run_name": "run_baseline", "n_estimators": 50,
+        "max_depth": 3, "learning_rate": 0.1, "subsample": 1.0,
+    },
+    {
+        "run_name": "run_deep", "n_estimators": 50,
+        "max_depth": 6, "learning_rate": 0.1, "subsample": 1.0,
+    },
+    {
+        "run_name": "run_fast_lr", "n_estimators": 100,
+        "max_depth": 3, "learning_rate": 0.3, "subsample": 1.0,
+    },
+    {
+        "run_name": "run_subsampled", "n_estimators": 100,
+        "max_depth": 4, "learning_rate": 0.1, "subsample": 0.8,
+    },
+    {
+        "run_name": "run_combined", "n_estimators": 150,
+        "max_depth": 5, "learning_rate": 0.05, "subsample": 0.9,
+    },
 ]
 
 
@@ -57,7 +72,9 @@ def make_dataset():
     return train_test_split(X, y, test_size=0.2, random_state=RANDOM_SEED)
 
 
-def train_and_evaluate(config: dict, X_train, X_val, y_train, y_val) -> tuple[xgb.XGBClassifier, dict]:
+def train_and_evaluate(
+    config: dict, X_train, X_val, y_train, y_val,
+) -> tuple[xgb.XGBClassifier, dict]:
     """Train an XGBoost model and return it with its evaluation metrics."""
     model = xgb.XGBClassifier(
         n_estimators=config["n_estimators"],
@@ -195,7 +212,7 @@ def main():
     probabilities = champion_model.predict_proba(sample)[:, 1]
 
     print(f"Model URI  : {champion_uri}")
-    print(f"Predictions (first 5 samples):")
+    print("Predictions (first 5 samples):")
     for i, (pred, prob) in enumerate(zip(predictions, probabilities)):
         label = "POSITIVE" if pred == 1 else "negative"
         print(f"  sample[{i}]  →  {label}  (prob={prob:.3f})")

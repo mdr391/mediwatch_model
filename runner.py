@@ -72,7 +72,9 @@ def _register_and_alias(
         # Save current champion as previous_champion before promoting
         try:
             current = client.get_model_version_by_alias(REGISTERED_MODEL, CHAMPION_ALIAS)
-            client.set_registered_model_alias(REGISTERED_MODEL, PREVIOUS_CHAMPION_ALIAS, current.version)
+            client.set_registered_model_alias(
+                REGISTERED_MODEL, PREVIOUS_CHAMPION_ALIAS, current.version,
+            )
             print(f"[MLflow] Saved v{current.version} → @{PREVIOUS_CHAMPION_ALIAS}")
         except Exception:
             pass  # No current champion (cold start), nothing to save

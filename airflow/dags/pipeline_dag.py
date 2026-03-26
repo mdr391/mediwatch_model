@@ -7,7 +7,8 @@ Each DAG run processes a single window date passed via conf:
     {"window_date": "YYYY-MM-DD"}
 
 Tasks:
-    detect_window → drift_report → train_challenger → evaluate_models → promote_decision → log_summary
+    detect_window → drift_report → train_challenger →
+    evaluate_models → promote_decision → log_summary
 
 Cross-run state (which model is current champion) is stored in the
 MLflow model registry via the @champion alias.  Each run reads the
@@ -26,8 +27,10 @@ import sys
 import tempfile
 from datetime import datetime
 
-from airflow import DAG
 from airflow.operators.python import PythonOperator
+
+from airflow import DAG
+
 
 def _ensure_pythonpath():
     """Add the mounted project root to sys.path so src.* imports work."""
@@ -50,6 +53,7 @@ def detect_window(**context):
     _ensure_pythonpath()
     import mlflow
     from mlflow import MlflowClient
+
     from src.config import CHAMPION_ALIAS, EXPERIMENT_NAME, REGISTERED_MODEL, init_dirs
     from src.mlflow_utils import ensure_experiment_active
 
@@ -103,6 +107,7 @@ def drift_report(**context):
     """
     _ensure_pythonpath()
     import mlflow
+
     from src.config import REPORTS_DIR
     from src.data import get_previous_window_date, load_eval
     from src.drift import run_drift_report as _run_drift
@@ -138,6 +143,7 @@ def train_challenger(**context):
     """Train a new model on the sliding 2-window training set."""
     _ensure_pythonpath()
     import mlflow
+
     from src.config import PROMOTION_THRESHOLD
     from src.data import load_sliding_train
     from src.preprocessing import clean_and_engineer, split_xy
@@ -165,6 +171,7 @@ def evaluate_models(**context):
     """Evaluate challenger (and champion if present) on current eval set."""
     _ensure_pythonpath()
     import mlflow
+
     from src.data import load_eval
     from src.evaluation import evaluate_and_save
     from src.preprocessing import clean_and_engineer, split_xy
@@ -224,7 +231,13 @@ def promote_decision(**context):
     import mlflow
     import mlflow.sklearn
     from mlflow import MlflowClient
-    from src.config import CHAMPION_ALIAS, PREVIOUS_CHAMPION_ALIAS, PROMOTION_THRESHOLD, REGISTERED_MODEL
+
+    from src.config import (
+        CHAMPION_ALIAS,
+        PREVIOUS_CHAMPION_ALIAS,
+        PROMOTION_THRESHOLD,
+        REGISTERED_MODEL,
+    )
     from src.training import load_pipeline
 
     state       = context["ti"].xcom_pull(task_ids="detect_window")
@@ -270,7 +283,9 @@ def promote_decision(**context):
             # Save current champion as previous_champion before promoting
             try:
                 current = client.get_model_version_by_alias(REGISTERED_MODEL, CHAMPION_ALIAS)
-                client.set_registered_model_alias(REGISTERED_MODEL, PREVIOUS_CHAMPION_ALIAS, current.version)
+                client.set_registered_model_alias(
+                    REGISTERED_MODEL, PREVIOUS_CHAMPION_ALIAS, current.version,
+                )
                 print(f"Saved v{current.version} → @{PREVIOUS_CHAMPION_ALIAS}")
             except Exception:
                 pass  # No current champion (cold start), nothing to save
