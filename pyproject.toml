@@ -1,7 +1,7 @@
 [project]
 name = "mediwatch-model"
 version = "0.1.0"
-description = "Add your description here"
+description = "Champion/challenger retraining pipeline with drift monitoring and gated promotion for 30-day hospital readmission prediction"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
