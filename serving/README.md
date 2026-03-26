@@ -82,7 +82,5 @@ curl -X POST http://localhost:8000/predict \
 ## Install serving dependencies
 
 ```bash
-pip install "mediwatch-model[serving]"
-# or directly:
-pip install "fastapi>=0.100" "uvicorn[standard]>=0.20"
+uv sync --extra serving
 ```
