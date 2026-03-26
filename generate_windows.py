@@ -6,7 +6,7 @@ correlated with the target before splitting."""
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from src.config import WINDOW_DATES, WINDOWS_DIR
+from src.config import RANDOM_SEED, WINDOW_DATES, WINDOWS_DIR
 
 
 def main():
@@ -30,7 +30,7 @@ def main():
         end = start + window_size if i < n_windows - 1 else len(df)
         window = df.iloc[start:end]
 
-        train, eval_ = train_test_split(window, test_size=0.2, random_state=42)
+        train, eval_ = train_test_split(window, test_size=0.2, random_state=RANDOM_SEED)
 
         train.to_parquet(WINDOWS_DIR / f"{date}-train.parquet", index=False)
         eval_.to_parquet(WINDOWS_DIR / f"{date}-eval.parquet", index=False)

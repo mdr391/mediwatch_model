@@ -28,6 +28,7 @@ REGISTERED_MODEL    = "mediwatch_xgboost"
 CHAMPION_ALIAS          = "champion"
 PREVIOUS_CHAMPION_ALIAS = "previous_champion"
 PROMOTION_THRESHOLD = 0.01
+RANDOM_SEED = 42
 
 TARGET_COL = "readmitted_binary"
 

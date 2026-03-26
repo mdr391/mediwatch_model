@@ -4,7 +4,7 @@ import joblib
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 
-from src.config import PIPELINES_DIR
+from src.config import PIPELINES_DIR, RANDOM_SEED
 from src.preprocessing import build_preprocessor
 
 
@@ -23,7 +23,7 @@ def build_pipeline() -> Pipeline:
                     subsample=0.8,        # row sampling per tree reduces overfitting
                     # ~12% positive class → 88/12 ≈ 7; rounded up to bias toward recall
                     scale_pos_weight=15,
-                    random_state=42,      # reproducibility
+                    random_state=RANDOM_SEED,
                 ),
             ),
         ]
