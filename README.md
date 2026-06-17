@@ -164,3 +164,5 @@ This is a portfolio demonstration, not a production system. Key gaps:
 - **MLflow** — Metric logging, model registry, and artifact tracking
 - **Airflow** — DAG orchestration (one run per data window)
 - **pandas / numpy** — Data manipulation
+
+Copyright © 2026 Zahidur Rahman Zvi Boshernitzan
